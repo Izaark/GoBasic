@@ -1,6 +1,8 @@
 package main
 import ("fmt"
 		//"math"
+		"bufio"
+		"os"
 		)
 
 
@@ -9,7 +11,7 @@ import ("fmt"
 func main() {
 	
 	//multiplicar(3)
-	bizz_bozz()
+	//bizz_bozz()
 	//bonacci()
 	fmt.Println(add(42, 13))
 	a, b := swap("hola", "mundo")
@@ -19,7 +21,8 @@ func main() {
     v.X = 4
     fmt.Println(v.X)
 
-    arrays()
+    //arrays()
+    read_write()
 }
 
 func multiplicar(num int) {
@@ -77,5 +80,16 @@ func arrays() {
     for i := 0; i < len(p); i++ {
         fmt.Printf("p[%d] == %d\n",i, p[i])
     }
+}
+
+func read_write() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Ingresa tu nombre: ")
+	name, err := reader.ReadString('\n')
+	if err != nil {
+		fmt.Println(err)
+	}else{
+		fmt.Println("Hola "+ name)
+	}
 }
 
