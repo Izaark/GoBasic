@@ -1,12 +1,14 @@
 package main
 
+
 import (
 	"fmt"
 	"log"
 	"encoding/json"
 	r "gopkg.in/gorethink/gorethink.v3"
 	"github.com/gin-gonic/gin"
-	//"reflect"
+	"reflect"
+	"strconv"
 	)
 
 var session *r.Session
@@ -21,7 +23,7 @@ type Users struct {
 func initDb() *r.Session {
 	var err error
 	session, err := r.Connect(r.ConnectOpts{
-	Address: "192.168.0.4:28015",
+	Address: "192.168.0.2:28015",
 	})
 
 	if err != nil {
@@ -57,9 +59,9 @@ func main() {
 	{
 		v1.POST("/users", PostUser)
 		v1.GET("/users", GetUsers)
+		v1.GET("/users/:id", GetUser)
 		v1.PUT("/users/:id", UpdateUser)
 		v1.DELETE("/users/:id", DeleteUser)
-
 	}
 	
 	router.Run(":1337")
@@ -96,6 +98,29 @@ func GetUsers(c *gin.Context) {
 
 }
 
+func GetUser(c *gin.Context) {
+	db := initDb()
+	defer db.Close()
+
+	id_temp := c.Params.ByName("id")
+    fmt.Println("id:", id_temp)
+    id, err := strconv.Atoi(id_temp)
+    fmt.Println(reflect.TypeOf(id))
+
+	cursor, err := r.Table("users").Get(id).Run(db)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if id != 0 {
+		var user Users
+		cursor.One(&user)
+		c.JSON(200, user)
+	}else{
+		c.JSON(404, gin.H{"error": "Usuario no encontrado"})
+	}
+}
+
 func PostUser(c *gin.Context) {
 	db := initDb()
 	defer db.Close()
@@ -117,20 +142,31 @@ func PostUser(c *gin.Context) {
 }
 
 func DeleteUser(c *gin.Context) {
-	db := initDb()
-	defer db.Close()
-
-	id := c.Params.ByName("id")
-	fmt.Println("=======", id)
-
-	if id != "" {
-		r.Table("users").Get(id).Delete().Run(db)
-		c.JSON(200, gin.H{"success": "User #" + id + " eliminado alv"})
-	}else {
-		c.JSON(404, gin.H{"error": "No se encuentra el usuario"})
-		fmt.Println("=======", id)
-	}
+    db := initDb()
+    defer db.Close()
+    fmt.Println("DELETE OP!")
+    id_temp := c.Params.ByName("id")
+    fmt.Println("id:", id_temp)
+    id, err := strconv.Atoi(id_temp)
+	fmt.Println(reflect.TypeOf(id))
+    cursor, err := r.Table("users").Get(id).Run(db)
+    var hero []interface{}
+    err = cursor.All(&hero)
+    if err != nil {
+        fmt.Println(err)
+    }
+    fmt.Println("OUT!",err,";;;",hero,";;;",cursor)
+    c.JSON(200, hero)
+    if id != 0 {
+        r.Table("users").Get(id).Delete().Run(db)
+        //fmt.Println("IN!",err,";;;",cursor)
+        c.JSON(200, gin.H{"success": "User #" + string(id) + " eliminado alv"})
+    }else {
+      c.JSON(404, gin.H{"error": "No se encuentra el usuario"})
+      fmt.Println("=======", id)
+    }
 }
+
 
 
 func UpdateUser( c *gin.Context) {
